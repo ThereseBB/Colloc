@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colocation Manager</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #e0f7fa, #80deea);
+            color: #333;
+        }
+        header {
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 5px solid #ffc1e3;
+        }
+        header h1 {
+            font-size: 3rem;
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #ffe4e1;
+            padding: 0.8rem;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        nav a {
+            color: #6c63ff;
+            text-decoration: none;
+            font-size: 1.2rem;
+            margin: 0 1rem;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-shadow: 0 0 10px #6c63ff;
+        }
+        section {
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+        .task-list, .invoice-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task, .invoice {
+            background: #fce4ec;
+            margin: 0.5rem 0;
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #f8bbd0;
+        }
+        .task:hover, .invoice:hover {
+            background: #f8bbd0;
+        }
+        .task input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.5);
+        }
+        .add-task-form input, .add-task-form select {
+            padding: 0.8rem;
+            margin-right: 0.8rem;
+            border-radius: 15px;
+            border: 2px solid #ffd1dc;
+            outline: none;
+        }
+        .add-task-form input:focus, .add-task-form select:focus {
+            border-color: #ff80ab;
+        }
+        .add-task-form button {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        .add-task-form button:hover {
+            background: linear-gradient(to left, #ff9a9e, #fad0c4);
+            transform: scale(1.05);
+        }
+        footer {
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -3px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+        function loadTasks() {
+            const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            savedTasks.forEach(task => {
+                const newTask = document.createElement('li');
+                newTask.className = 'task';
+                newTask.innerHTML = `
+                    <input type="checkbox" onchange="toggleTaskCompletion(this)" ${task.completed ? 'checked' : ''}>
+                    <span>${task.name}</span>
+                    <span>Par: ${task.assignee}</span>
+                    <span>Pour: ${task.dueDate}</span>
+                    <button onclick="removeTask(this, '${task.name}')">Supprimer</button>
+                `;
+                taskList.appendChild(newTask);
+            });
+        }
+
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const assigneeInput = document.getElementById('assigneeInput');
+            const dueDateInput = document.getElementById('dueDateInput');
+            const taskList = document.getElementById('taskList');
+
+            const newTask = {
+                name: taskInput.value,
+                assignee: assigneeInput.value,
+                dueDate: dueDateInput.value,
+                completed: false
+            };
+
+            saveTask(newTask);
+
+            const taskElement = document.createElement('li');
+            taskElement.className = 'task';
+            taskElement.innerHTML = `
+                <input type="checkbox" onchange="toggleTaskCompletion(this)">
+                <span>${newTask.name}</span>
+                <span>Par: ${newTask.assignee}</span>
+                <span>Pour: ${newTask.dueDate}</span>
+                <button onclick="removeTask(this, '${newTask.name}')">Supprimer</button>
+            `;
+            taskList.appendChild(taskElement);
+
+            taskInput.value = '';
+            assigneeInput.value = '';
+            dueDateInput.value = '';
+        }
+
+        function saveTask(task) {
+            const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            savedTasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(savedTasks));
+        }
+
+        function removeTask(button, taskName) {
+            const task = button.parentElement;
+            const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const updatedTasks = savedTasks.filter(t => t.name !== taskName);
+            localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+            task.remove();
+        }
+
+        function toggleTaskCompletion(checkbox) {
+            const taskElement = checkbox.parentElement;
+            const taskName = taskElement.querySelector('span').textContent.trim();
+            const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const task = savedTasks.find(t => t.name === taskName);
+            if (task) {
+                task.completed = checkbox.checked;
+                localStorage.setItem('tasks', JSON.stringify(savedTasks));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTasks);
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Colocation Manager</h1>
+        <p>Gérez les tâches, les factures et la vie de votre colocation avec une touche magique !</p>
+    </header>
+    <nav>
+        <a href="#tasks">✨ Tâches ✨</a>
+        <a href="#invoices">💸 Factures 💸</a>
+        <a href="#notes">📝 Notes 📝</a>
+    </nav>
+    <section id="tasks" class="container">
+        <h2>📋 Liste des Tâches</h2>
+        <div class="add-task-form">
+            <input type="text" id="taskInput" placeholder="Ajouter une tâche...">
+            <input type="text" id="assigneeInput" placeholder="Qui doit le faire...">
+            <input type="date" id="dueDateInput">
+            <button onclick="addTask()">Ajouter</button>
+        </div>
+        <ul id="taskList" class="task-list">
+            <!-- Tasks will be dynamically loaded here -->
+        </ul>
+    </section>
+    <section id="invoices"
